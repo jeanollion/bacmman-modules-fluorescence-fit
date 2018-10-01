@@ -27,7 +27,7 @@ import bacmman.image.Image;
 import bacmman.measurement.MeasurementKey;
 import bacmman.measurement.MeasurementKeyObject;
 import bacmman.plugins.Measurement;
-import bacmman.plugins.ToolTip;
+import bacmman.plugins.Tip;
 import bacmman.utils.Utils;
 
 import java.util.ArrayList;
@@ -43,11 +43,11 @@ import java.util.stream.IntStream;
  *
  * @author Jean Ollion
  */
-public class FluorescenceFit implements Measurement, ToolTip {
+public class FluorescenceFit implements Measurement, Tip {
     private ObjectClassParameter bacteriaClass = new ObjectClassParameter("Bacteria");
-    private BoundedNumberParameter fitXRange = new BoundedNumberParameter("Fit X-range", 0, 100, 0, null).setToolTipText("Length of segment (in pixels) on which fit will be performed");
-    private ObjectClassParameter fluo = new ObjectClassParameter("Fluorescence Channel").setToolTipText("Fluorescence channel to measure");
-    private TextParameter suffix = new TextParameter("Suffix", "", false).setToolTipText("Suffix to add to the measurement column name");
+    private BoundedNumberParameter fitXRange = new BoundedNumberParameter("Fit X-range", 0, 100, 0, null).setTip("Length of segment (in pixels) on which fit will be performed");
+    private ObjectClassParameter fluo = new ObjectClassParameter("Fluorescence Channel").setTip("Fluorescence channel to measure");
+    private TextParameter suffix = new TextParameter("Suffix", "", false).setTip("Suffix to add to the measurement column name");
     private Parameter[] parameters = new Parameter[]{bacteriaClass, fluo, fitXRange, suffix};
     boolean verbose;
     

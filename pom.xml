@@ -9,8 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>bacmman.modules</groupId>
-    <artifactId>bacmman-modules-fluorescence-fit</artifactId>
-
+    <artifactId>bacmman-modules-fluorescence_fit</artifactId>
+    <version>0.1-SNAPSHOT</version>
 
 </project>

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with BACMMAN.  If not, see <http://www.gnu.org/licenses/>.
  */
-package bacmman.plugins.legacy;
+package bacmman.plugins.plugins.measurements;
 
 import bacmman.configuration.parameters.BoundedNumberParameter;
 import bacmman.configuration.parameters.ObjectClassParameter;

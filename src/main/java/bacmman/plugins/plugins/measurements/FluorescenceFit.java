@@ -22,7 +22,7 @@ import bacmman.configuration.parameters.BoundedNumberParameter;
 import bacmman.configuration.parameters.ObjectClassParameter;
 import bacmman.configuration.parameters.Parameter;
 import bacmman.configuration.parameters.TextParameter;
-import bacmman.data_structure.StructureObject;
+import bacmman.data_structure.SegmentedObject;
 import bacmman.image.Image;
 import bacmman.measurement.MeasurementKey;
 import bacmman.measurement.MeasurementKeyObject;
@@ -83,7 +83,7 @@ public class FluorescenceFit implements Measurement, Tip {
     }
 
     @Override
-    public void performMeasurement(StructureObject bacteria) {
+    public void performMeasurement(SegmentedObject bacteria) {
         // get observed fluo distribution
         Image fluoImage = bacteria.getRoot().getRawImage(fluo.getSelectedClassIdx()); // the "root" object corresponds to the whole viewfield. the fit extends beyond the range of the microchannel object in wich the bacteria is located
         int yMin = bacteria.getBounds().yMin();

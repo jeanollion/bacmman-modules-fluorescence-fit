@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>bacmman-modules</artifactId>
-        <groupId>bacmman.modules</groupId>
+        <groupId>com.github.jeanollion</groupId>
         <version>v2.1.5</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>

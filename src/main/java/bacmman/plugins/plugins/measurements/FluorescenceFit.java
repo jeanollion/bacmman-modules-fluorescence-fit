@@ -26,8 +26,8 @@ import bacmman.data_structure.SegmentedObject;
 import bacmman.image.Image;
 import bacmman.measurement.MeasurementKey;
 import bacmman.measurement.MeasurementKeyObject;
+import bacmman.plugins.Hint;
 import bacmman.plugins.Measurement;
-import bacmman.plugins.Tip;
 import bacmman.utils.Utils;
 
 import java.util.ArrayList;
@@ -43,35 +43,51 @@ import java.util.stream.IntStream;
  *
  * @author Jean Ollion
  */
-public class FluorescenceFit implements Measurement, Tip {
+public class FluorescenceFit implements Measurement, Hint {
     private ObjectClassParameter bacteriaClass = new ObjectClassParameter("Bacteria");
-    private BoundedNumberParameter fitXRange = new BoundedNumberParameter("Fit X-range", 0, 100, 0, null).setTip("Length of segment (in pixels) on which fit will be performed");
-    private ObjectClassParameter fluo = new ObjectClassParameter("Fluorescence Channel").setTip("Fluorescence channel to measure");
-    private TextParameter suffix = new TextParameter("Suffix", "", false).setTip("Suffix to add to the measurement column name");
+    private BoundedNumberParameter fitXRange = new BoundedNumberParameter("Fit X-range", 0, 100, 0, null).setHint("Length of segment (in pixels) on which fit will be performed");
+    private ObjectClassParameter fluo = new ObjectClassParameter("Fluorescence Channel").setHint("Fluorescence channel to measure");
+    private TextParameter suffix = new TextParameter("Suffix", "", false).setHint("Suffix to add to the measurement column name");
     private Parameter[] parameters = new Parameter[]{bacteriaClass, fluo, fitXRange, suffix};
     boolean verbose;
-    
-    // implementation of the ToolTip interface (help displayed on hover)
+
+    // implementation of the Hint interface
+
+    /**
+     *
+     * @return help message displayed on hover
+     */
     @Override
-    public String getToolTipText() {
+    public String getHintText() {
         return "Estimation of total fluorescence and background of a cell as described in: Kaiser, Matthias, Florian Jug, Thomas Julou, Siddharth Deshpande, Thomas Pfohl, Olin K. Silander, Gene Myers, and Erik van Nimwegen. 2018. “Monitoring Single-Cell Gene Regulation Under Dynamically Controllable Conditions with Integrated Microfluidics and Software.” Nature Communications 9 (1):212. https://doi.org/10.1038/s41467-017-02505-0.";
     }
     
     // implementation of the Measurement interface
+
+    /**
+     *
+     * @return the object class on which is called the measurement in the method {@link #performMeasurement(SegmentedObject)}
+     * In this case it should be on bacteria
+     */
     @Override
     public int getCallObjectClassIdx() {
         return bacteriaClass.getSelectedClassIdx();
     }
 
-    // this method asks if the measurement should be applied on each object of the call structure track or only on the first element (ie trackhead)
-    // in this case we apply the measurement to each object   
+    /**
+     *
+     * @return Whether the the measurement should be applied on each object of the call structure track or only on the first element (ie trackhead)
+     * In this case the measurement is applied on each observation of bacteria so return is false
+     */
     @Override
     public boolean callOnlyOnTrackHeads() {
         return false;
     }
-    
-    // name and object class of output values. 
-    // in our case all fitted values are returned and associated to bacteria object (4 measurement per bacteria)
+
+    /**
+     *
+     * @return list of name and associated object class of output values. In this case the amplitude and background are both associated to the bacteria object class
+     */
     @Override
     public List<MeasurementKey> getMeasurementKeys() {
         String suf = suffix.getValue();
@@ -82,9 +98,21 @@ public class FluorescenceFit implements Measurement, Tip {
         }};
     }
 
+    /**
+     * Perform the fluorescence fit around the object {@param bacteria}
+     * @param bacteria observation of a segmented bacteria at a given frame.
+     * The SegmentedObject class gives access to:
+     * - the tracking links information (previous, next, and trackhead)
+     * - the parent (in the case of bacteria the parent is the microchannel object that contains the bacteria) and children if existing (e.g. the bacteria for a microchannel object)
+     * - the raw images cropped according to the bounds of the object
+     * - the region which contains the spatial information (bounding box, voxels, mask)
+     */
     @Override
     public void performMeasurement(SegmentedObject bacteria) {
-        // get observed fluo distribution
+        /*The first step is to collect the fluorescence data.
+        In our case we need to have access to fluorescence beyond the bounds of the microchannel, thus we will use the whole view-field image which is contained in the "root" parent object accessed through the method getRoot().
+        The following code collects the fluorescence profile:
+        */
         Image fluoImage = bacteria.getRoot().getRawImage(fluo.getSelectedClassIdx()); // the "root" object corresponds to the whole viewfield. the fit extends beyond the range of the microchannel object in wich the bacteria is located
         int yMin = bacteria.getBounds().yMin();
         int yMax = bacteria.getBounds().yMax();
@@ -112,11 +140,16 @@ public class FluorescenceFit implements Measurement, Tip {
         bacteria.getMeasurements().setValue("FluoBackground"+suffix.getValue(), fittedParams[1]);
     }
 
+    /**
+     *
+     * @return the parameters that will be accessible in the configuration tab
+     */
     @Override
     public Parameter[] getParameters() {
         return parameters;
     }
-    // funtion to set parameters 
+
+    // functions to set parameters from java code
     public FluorescenceFit setObjectClasses(int bacteria, int fluo) {
         this.bacteriaClass.setSelectedClassIdx(bacteria);
         this.fluo.setSelectedClassIdx(fluo);

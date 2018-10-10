@@ -99,13 +99,14 @@ public class FluorescenceFit implements Measurement, Hint {
     }
 
     /**
-     * Perform the fluorescence fit around the object {@param bacteria}
+     * Performs the fluorescence fit around the object {@param bacteria}, see {@link #fitFluo(double[], double, double[], double, double[], int, double)} for the algorithm details
      * @param bacteria observation of a segmented bacteria at a given frame.
      * The SegmentedObject class gives access to:
      * - the tracking links information (previous, next, and trackhead)
      * - the parent (in the case of bacteria the parent is the microchannel object that contains the bacteria) and children if existing (e.g. the bacteria for a microchannel object)
      * - the raw images cropped according to the bounds of the object
      * - the region which contains the spatial information (bounding box, voxels, mask)
+     * This method does not return anything, but resulting values are stored in the measurements of the {@param bacteria}
      */
     @Override
     public void performMeasurement(SegmentedObject bacteria) {
@@ -123,19 +124,19 @@ public class FluorescenceFit implements Measurement, Hint {
             return IntStream.rangeClosed(yMin, yMax)
                     .mapToDouble(y -> fluoImage.getPixelWithOffset(x, y, z)).sum(); // sum of fluorescence for each column
         }).toArray();
-        
-        // initial parameter values & bounds, as in Kaiser 2018. Might be included as parameters in order to better adapt to other systems (e.g with wider bacteria) ? 
+        // initial parameter values & bounds, as in Kaiser 2018. Might be included as parameters in order to better adapt to other systems (e.g with wider bacteria) ?
         double muStart = bacteria.getBounds().xMean() - xMin; // middle of peak starts at middle of bacteria object. -xMin because in the fitting function the index is 0-based
         double wStart = 5.5; // in a more general case, should it be a value depending on bacteria width ? 
         double[] muBounds = new double[]{40, 60};
         double[] wBounds = new double[] {3, 12};
         double precision = 1e-3;
         int maxIterations = 500;
-        
+
+        // actual call to the fitting method
         double[] fittedParams = fitFluo(observedFluo, muStart, muBounds, wStart, wBounds, maxIterations, precision);
         if (verbose) plot(observedFluo, fittedParams);
         
-        // store fitted parameters in measurements
+        // store fitted parameters in the object measurements
         bacteria.getMeasurements().setValue("FluoAmplitude"+suffix.getValue(), fittedParams[0]);
         bacteria.getMeasurements().setValue("FluoBackground"+suffix.getValue(), fittedParams[1]);
     }
@@ -147,21 +148,6 @@ public class FluorescenceFit implements Measurement, Hint {
     @Override
     public Parameter[] getParameters() {
         return parameters;
-    }
-
-    // functions to set parameters from java code
-    public FluorescenceFit setObjectClasses(int bacteria, int fluo) {
-        this.bacteriaClass.setSelectedClassIdx(bacteria);
-        this.fluo.setSelectedClassIdx(fluo);
-        return this;
-    }
-    public FluorescenceFit setXFitSegmentLength(int length) {
-        this.fitXRange.setValue(length);
-        return this;
-    }
-    public FluorescenceFit setVerbose(boolean verbose) {
-        this.verbose= verbose;
-        return this;
     }
     
     // processing functions
@@ -244,16 +230,6 @@ public class FluorescenceFit implements Measurement, Hint {
         //logger.debug("fit: Bck{} Fluo: {}, mu: {}, width: {}, ro: {}", B, A, mu, w, ro);
         return diff;
     }
-    private static void plot(String title, DoubleUnaryOperator function, double[] x) {
-        double[] values = Arrays.stream(x).map(function).toArray();
-        Utils.plotProfile(title, values, x, null, null);
-    }
-    private static void plot(double[] observed, double[] parameters) {
-        double[] estimated_c_i = IntStream.range(0, observed.length).mapToDouble(i -> parameters[1] + parameters[0] / (1 + Math.pow((i - parameters[2])/parameters[3], 2) )).toArray();
-        double[] x = IntStream.range(0, observed.length).mapToDouble(i -> i).toArray(); // centered on iMid
-        Utils.plotProfile("observed and estimated fluo", estimated_c_i, x, observed, x);
-    }
-    
     
     /**
      * Finds a root of {@param function} within range {@param bounds} using bisection method
@@ -286,6 +262,29 @@ public class FluorescenceFit implements Measurement, Hint {
         return x;
     }
 
-    
+    // setters
+    public FluorescenceFit setObjectClasses(int bacteria, int fluo) {
+        this.bacteriaClass.setSelectedClassIdx(bacteria);
+        this.fluo.setSelectedClassIdx(fluo);
+        return this;
+    }
+    public FluorescenceFit setXFitSegmentLength(int length) {
+        this.fitXRange.setValue(length);
+        return this;
+    }
+    public FluorescenceFit setVerbose(boolean verbose) {
+        this.verbose= verbose;
+        return this;
+    }
 
+    // methods to plot for debuggin purpose
+    private static void plot(String title, DoubleUnaryOperator function, double[] x) {
+        double[] values = Arrays.stream(x).map(function).toArray();
+        Utils.plotProfile(title, values, x, null, null);
+    }
+    private static void plot(double[] observed, double[] parameters) {
+        double[] estimated_c_i = IntStream.range(0, observed.length).mapToDouble(i -> parameters[1] + parameters[0] / (1 + Math.pow((i - parameters[2])/parameters[3], 2) )).toArray();
+        double[] x = IntStream.range(0, observed.length).mapToDouble(i -> i).toArray(); // centered on iMid
+        Utils.plotProfile("observed and estimated fluo", estimated_c_i, x, observed, x);
+    }
 }

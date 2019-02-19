@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <!--groupId>com.github.jeanollion.bacmman</groupId-->
     <artifactId>bacmman-modules-fluorescence_fit</artifactId>
-    <version>v0.1.0</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
 
     <scm>
